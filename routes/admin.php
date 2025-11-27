@@ -14,7 +14,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 // User management (owner only)
 Route::middleware('role:owner')->group(function () {
-    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('users', UserController::class)->except([]);
     Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
     Route::delete('users/{user}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
 });

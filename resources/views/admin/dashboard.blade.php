@@ -36,6 +36,7 @@
                         <span id="periodLabel">30 Hari Terakhir</span>
                     </button>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item period-filter" href="#" data-period="today">Hari Ini</a></li>
                         <li><a class="dropdown-item period-filter" href="#" data-period="7days">7 Hari Terakhir</a></li>
                         <li><a class="dropdown-item period-filter active" href="#" data-period="30days">30 Hari Terakhir</a></li>
                         <li><a class="dropdown-item period-filter" href="#" data-period="90days">90 Hari Terakhir</a></li>
@@ -314,6 +315,7 @@ $(document).ready(function() {
 
         const period = $(this).data('period');
         const periodLabels = {
+            'today': 'Hari Ini',
             '7days': '7 Hari Terakhir',
             '30days': '30 Hari Terakhir',
             '90days': '90 Hari Terakhir'
@@ -324,11 +326,17 @@ $(document).ready(function() {
         $(this).addClass('active');
 
         // Update chart data
-        $.get('{{ route("dashboard.sales-data") }}', { period: period }, function(data) {
-            salesChart.data.labels = data.labels;
-            salesChart.data.datasets[0].data = data.revenues;
-            salesChart.data.datasets[1].data = data.transactions;
-            salesChart.update();
+        $.ajax({
+            url: '{{ route("dashboard.sales-data") }}',
+            type: 'GET',
+            data: { period: period },
+            cache: false, // Tambahkan ini untuk mencegah caching oleh browser
+            success: function(data) {
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.revenues;
+                salesChart.data.datasets[1].data = data.transactions;
+                salesChart.update();
+            }
         });
     });
 });

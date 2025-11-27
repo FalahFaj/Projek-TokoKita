@@ -43,19 +43,20 @@ class TransactionDetail extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function getFormattedUnitPriceAtr(): string
+    public function getFormattedUnitPriceAttribute(): string
     {
         return 'Rp ' . number_format((float) $this->unit_price, 0, ',', '.');
     }
 
-    public function getFormattedSubtotalAtr(): string
+    public function getFormattedSubtotalAttribute(): string
     {
         return 'Rp ' . number_format((float) $this->subtotal, 0, ',', '.');
     }
 
     public function calculateSubtotal(): void
     {
-        $this->subtotal = $this->unit_price->multipliedBy($this->quantity);
+        $calculatedSubtotal = (float) $this->unit_price * (int) $this->quantity;
+        $this->subtotal = (string) $calculatedSubtotal;
     }
 
     protected static function boot()

@@ -144,7 +144,7 @@ class Transaction extends Model
 
         static::created(function ($transaction) {
             if ($transaction->payment_status === 'paid') {
-                $transaction->processStockReduction();
+                $transaction->prosesNgurangiStok();
             }
         });
     }

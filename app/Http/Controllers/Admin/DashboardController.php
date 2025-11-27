@@ -103,9 +103,15 @@ class DashboardController extends Controller
             });
     }
 
-    private function getSalesChartData($days = 30)
+    private function getSalesChartData($period = '30days')
     {
-        $startDate = now()->subDays($days);
+        $days = match($period) {
+            'today' => 0,
+            '7days' => 6,
+            '90days' => 89,
+            default => 29,
+        };
+        $startDate = now()->subDays($days)->startOfDay();
 
         $salesData = Transaction::where('payment_status', 'paid')
             ->where('created_at', '>=', $startDate)
@@ -142,14 +148,7 @@ class DashboardController extends Controller
     {
         $period = $request->get('period', '30days');
 
-        $days = match($period) {
-            '7days' => 7,
-            '90days' => 90,
-            default => 30,
-        };
-
-        $chartData = $this->getSalesChartData($days);
-
+        $chartData = $this->getSalesChartData($period);
         return response()->json($chartData);
     }
 

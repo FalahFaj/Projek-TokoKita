@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\POSController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SaleController;
 
 // POS Routes
 Route::prefix('pos')->name('pos.')->group(function () {
@@ -11,7 +12,12 @@ Route::prefix('pos')->name('pos.')->group(function () {
     Route::post('/update-cart', [POSController::class, 'updateCart'])->name('update-cart');
     Route::post('/remove-from-cart', [POSController::class, 'removeFromCart'])->name('remove-from-cart');
     Route::post('/checkout', [POSController::class, 'checkout'])->name('checkout');
-    Route::get('/receipt/{transaction}', [POSController::class, 'receipt'])->name('receipt');
+    Route::get('/receipt/{transaction}', [SaleController::class, 'receipt'])->name('receipt');
+    Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+    Route::get('/sales/receipt/{id}', [SaleController::class, 'receipt'])->name('receipt');
+    Route::get('/products/search', [SaleController::class, 'searchProducts'])->name('products.search');
+    Route::get('/products/{id}', [SaleController::class, 'getProduct'])->name('products.get');
+    Route::get('/transactions/today', [SaleController::class, 'todayTransactions'])->name('transactions.today');
 });
 
 // Dashboard untuk kasir

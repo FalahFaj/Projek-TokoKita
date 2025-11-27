@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\POSController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,7 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // POS route untuk kasir
-    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    Route::get('/pos', [SaleController::class, 'index'])->name('pos.index');
 
     // API routes untuk dashboard
     Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
