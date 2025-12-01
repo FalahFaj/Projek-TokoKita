@@ -1,6 +1,4 @@
-import * as bootstrap from 'bootstrap';
-
-class POSSystem {
+export default class POSSystem {
     constructor() {
         this.cart = [];
         this.init();
@@ -13,11 +11,16 @@ class POSSystem {
     }
 
     initializeSelect2() {
+    // Cek apakah elemen ada DAN apakah fungsi select2 tersedia
+    if ($("#categoryFilter").length && typeof $.fn.select2 === 'function') {
         $("#categoryFilter").select2({
             placeholder: "Pilih kategori...",
             allowClear: true,
         });
+    } else {
+        console.warn("Select2 module not loaded or element not found, skipping UI enhancement.");
     }
+}
 
     bindEvents() {
         // Search functionality
@@ -53,6 +56,44 @@ class POSSystem {
 
         // Keyboard shortcuts
         $(document).on("keydown", (e) => this.handleKeyboardShortcuts(e));
+
+        // General action buttons like 'clearCart' and 'processPayment'
+        $('body').on('click', '[data-action]', (e) => {
+            e.preventDefault();
+            const action = $(e.currentTarget).data('action');
+            if (typeof this[action] === 'function') {
+                this[action]();
+            }
+        });
+
+        // Event delegation for dynamically created elements
+        this.bindDynamicEvents();
+    }
+
+    bindDynamicEvents() {
+        // Add to cart from product grid
+        $('#productsGrid').on('click', '.product-card', (e) => {
+            const card = $(e.currentTarget);
+            if (card.parent().hasClass('out-of-stock')) return;
+            const productId = parseInt(card.data('product-id'));
+            if (productId) {
+                this.addToCart(productId);
+            }
+        });
+
+        // Cart actions
+        $('#cartItems').on('click', '.remove-from-cart', (e) => {
+            this.removeFromCart($(e.currentTarget).data('id'));
+        });
+        $('#cartItems').on('click', '.quantity-btn-minus', (e) => {
+            this.updateQuantity($(e.currentTarget).data('id'), -1);
+        });
+        $('#cartItems').on('click', '.quantity-btn-plus', (e) => {
+            this.updateQuantity($(e.currentTarget).data('id'), 1);
+        });
+        $('#cartItems').on('change', '.quantity-input', (e) => {
+            this.setQuantity($(e.currentTarget).data('id'), $(e.currentTarget).val());
+        });
     }
 
     filterProducts() {
@@ -139,10 +180,7 @@ class POSSystem {
     addFirstVisibleProduct() {
         const firstProduct = $(".product-item:visible").first();
         if (firstProduct.length) {
-            const productId = firstProduct
-                .find(".product-card")
-                .attr("onclick")
-                ?.match(/\d+/)?.[0];
+            const productId = firstProduct.find(".product-card").data('product-id');
             if (productId) {
                 this.addToCart(parseInt(productId));
             }
@@ -189,28 +227,19 @@ class POSSystem {
                                 item.price
                             )}</p>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="pos.removeFromCart(${
-                            item.id
-                        })">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-from-cart" data-id="${item.id}">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="pos.updateQuantity(${
-                                item.id
-                            }, -1)">
+                            <button class="quantity-btn quantity-btn-minus" data-id="${item.id}">
                                 <i class="fas fa-minus"></i>
                             </button>
                             <input type="number" class="quantity-input" value="${
                                 item.quantity
-                            }"
-                                   onchange="pos.setQuantity(${
-                                       item.id
-                                   }, this.value)" min="1" max="${item.stock}">
-                            <button class="quantity-btn" onclick="pos.updateQuantity(${
-                                item.id
-                            }, 1)">
+                            }" data-id="${item.id}" min="1" max="${item.stock}">
+                            <button class="quantity-btn quantity-btn-plus" data-id="${item.id}">
                                 <i class="fas fa-plus"></i>
                             </button>
                             <span class="ms-2 text-muted small">${
@@ -438,15 +467,15 @@ class POSSystem {
             payment_method: paymentMethod,
             cash_amount: paymentMethod === "cash" ? cashAmount : total,
             customer_name: customerName,
-            discount_amount: 0, // Bisa ditambahkan fitur diskon nanti
-            tax_amount: 0, // Bisa ditambahkan fitur pajak nanti
+            discount_amount: 0,
+            tax_amount: 0,
         };
 
         // Tampilkan loading
         this.showLoading(true);
 
         try {
-            const response = await $.ajax({ // NOSONAR
+            const response = await $.ajax({
                 url: window.posRoutes.store,
                 method: "POST",
                 data: {
@@ -507,11 +536,28 @@ class POSSystem {
             </div>
         `;
 
-        // Gunakan metode close dari Bootstrap untuk menghindari konflik
-        const existingAlert = bootstrap.Alert.getInstance($('.alert-dismissible')[0]);
-        if (existingAlert) existingAlert.close();
+        // 1. Hapus alert lama SECARA PAKSA (Instant Remove)
+        // Kita pakai .remove() biasa, jangan bsAlert.close() untuk pembersihan
+        // agar tidak terjadi konflik animasi (race condition).
+        $('.alert-dismissible').remove();
 
-        $(".card-header").after(alertHtml);
+        // 2. Tampilkan alert baru
+        const $newAlert = $(alertHtml);
+        $(".card-header").after($newAlert);
+
+        // 3. Auto-close timer (Hanya jika bukan error)
+        if (type !== 'error') {
+            setTimeout(() => {
+                const alertElement = $newAlert[0];
+
+                // Cek extra aman: pastikan elemen masih nempel di body
+                if (alertElement && document.body.contains(alertElement)) {
+                    // Gunakan getOrCreateInstance untuk mencegah duplikasi instance
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+                    bsAlert.close();
+                }
+            }, 2000);
+        }
     }
 
     handleKeyboardShortcuts(e) {
@@ -641,8 +687,8 @@ refreshProductData() {
         });
 }
 
-// Update method showLoading untuk lebih informatif
-showLoading(show, message = 'Memproses...') { // NOSONAR
+
+showLoading(show, message = 'Memproses...') {
     const checkoutBtn = $('#checkoutBtn');
     const loadingOverlay = $('#loadingOverlay');
 
@@ -656,10 +702,3 @@ showLoading(show, message = 'Memproses...') { // NOSONAR
     }
 }
 }
-
-
-
-// Initialize POS system when document is ready
-$(document).ready(function () {
-    window.pos = new POSSystem();
-});

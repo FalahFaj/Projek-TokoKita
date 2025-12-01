@@ -54,8 +54,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h5 class="card-title">Total Pendapatan</h5>
-                            <h2 class="mb-0">Rp {{ number_format($stats['monthly_revenue'], 0, ',', '.') }}</h2>
-                            <small>Bulan Ini</small>
+                            <h2 class="mb-0" id="totalRevenueValue">Rp {{ number_format($stats['period_revenue'], 0, ',', '.') }}</h2>
+                            <small>Total: Rp {{ number_format($stats['all_time_revenue'], 0, ',', '.') }}</small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-money-bill-wave fa-2x opacity-50"></i>
@@ -229,7 +229,8 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
+
 <script>
 $(document).ready(function() {
     // Initialize Sales Chart
@@ -330,15 +331,16 @@ $(document).ready(function() {
             url: '{{ route("dashboard.sales-data") }}',
             type: 'GET',
             data: { period: period },
-            cache: false, // Tambahkan ini untuk mencegah caching oleh browser
+            cache: false,
             success: function(data) {
                 salesChart.data.labels = data.labels;
                 salesChart.data.datasets[0].data = data.revenues;
                 salesChart.data.datasets[1].data = data.transactions;
+                $('#totalRevenueValue').text(data.total_revenue_formatted);
                 salesChart.update();
             }
         });
     });
 });
 </script>
-@endsection
+@endpush()

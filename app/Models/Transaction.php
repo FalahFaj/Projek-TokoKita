@@ -81,6 +81,7 @@ class Transaction extends Model
         return $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
     }
 
+
     public function scopePaid($query)
     {
         return $query->where('payment_status', 'paid');
@@ -166,8 +167,30 @@ class Transaction extends Model
         return self::bulanIni()->paid()->sum('total_amount');
     }
 
+    public static function allRevenue()
+    {
+        return self::paid()->sum('total_amount');
+    }
+
     public static function totalPaidCount(): int
     {
         return self::paid()->count();
+    }
+
+    public static function getRevenueForPeriod($period = '30days')
+    {
+        $query = self::paid();
+
+        $days = match($period) {
+            'today' => 0,
+            '7days' => 6,
+            '90days' => 89,
+            'all' => -1,
+            default => 29,
+        };
+
+        if ($days === -1) return $query->sum('total_amount');
+
+        return $query->where('created_at', '>=', now()->subDays($days)->startOfDay())->sum('total_amount');
     }
 }

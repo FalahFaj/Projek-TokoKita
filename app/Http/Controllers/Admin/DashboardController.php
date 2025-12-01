@@ -53,7 +53,8 @@ class DashboardController extends Controller
 
             'today_sales' => Transaction::todaySalesCount(),
             'today_revenue' => Transaction::todayRevenue(),
-            'monthly_revenue' => Transaction::monthlyRevenue(),
+            'period_revenue' => Transaction::getRevenueForPeriod('30days'), // Default 30 hari
+            'all_time_revenue' => Transaction::allRevenue(),
 
             'low_stock_count' => Product::lowStockCount(),
             'out_of_stock_count' => Product::outOfStockCount(),
@@ -149,7 +150,11 @@ class DashboardController extends Controller
         $period = $request->get('period', '30days');
 
         $chartData = $this->getSalesChartData($period);
-        return response()->json($chartData);
+        $totalRevenue = Transaction::getRevenueForPeriod($period);
+
+        return response()->json(array_merge($chartData, [
+            'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.')
+        ]));
     }
 
     public function getTopProducts()

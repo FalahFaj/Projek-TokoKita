@@ -58,8 +58,8 @@ class SaleController extends Controller
 
             // Calculate amounts
             $subtotal = $request->total_amount;
-            $taxAmount = 0; // You can add tax calculation here
-            $discountAmount = 0; // You can add discount calculation here
+            $taxAmount = 0;
+            $discountAmount = 0;
             $totalAmount = $subtotal - $discountAmount + $taxAmount;
             $paidAmount = $request->cash_amount ?? $totalAmount;
             $changeAmount = $paidAmount - $totalAmount;
@@ -88,7 +88,7 @@ class SaleController extends Controller
                     'transaction_id' => $transaction->id,
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'product_sku' => $product->sku ?? '', // Memberikan string kosong jika SKU null
+                    'product_sku' => $product->sku ?? '', 
                     'unit_price' => $product->selling_price,
                     'quantity' => $item['quantity'],
                     'subtotal' => $product->selling_price * $item['quantity'],

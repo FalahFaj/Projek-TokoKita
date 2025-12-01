@@ -2,10 +2,6 @@
 
 @section('title', 'POS - TokoKita')
 
-@section('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-@endsection
-
 @section('content')
 <div class="container-fluid pos-container">
     <div class="row">
@@ -43,7 +39,7 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-outline-secondary w-100" onclick="pos.clearFilters()">
+                            <button class="btn btn-outline-secondary w-100" data-action="clearFilters">
                                 <i class="fas fa-refresh"></i>
                             </button>
                         </div>
@@ -58,7 +54,7 @@
                                  data-sku="{{ strtolower($product->sku) }}"
                                  data-barcode="{{ strtolower($product->barcode) }}">
                                 <div class="card product-card h-100 {{ $product->stock <= 0 ? 'out-of-stock' : '' }}"
-                                     onclick="{{ $product->stock > 0 ? 'pos.addToCart(' . $product->id . ')' : '' }}">
+                                     data-product-id="{{ $product->id }}">
                                     <div class="card-body text-center p-3">
                                         <!-- Product content remains the same -->
                                         @if($product->image)
@@ -184,10 +180,10 @@
 
                         <!-- Actions -->
                         <div class="d-grid gap-2 mt-3">
-                            <button class="btn btn-success btn-lg py-3" onclick="pos.processPayment()" id="checkoutBtn" disabled>
+                            <button class="btn btn-success btn-lg py-3" data-action="processPayment" id="checkoutBtn" disabled>
                                 <i class="fas fa-check me-2"></i>PROSES PEMBAYARAN
                             </button>
-                            <button class="btn btn-outline-danger" onclick="pos.clearCart()">
+                            <button class="btn btn-outline-danger" data-action="clearCart">
                                 <i class="fas fa-trash me-2"></i>Kosongkan Keranjang
                             </button>
                         </div>
@@ -206,13 +202,12 @@
 </div>
 @endsection
 
-@section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@push('scripts')
 <script>
+    // Mendefinisikan variabel global yang akan digunakan oleh pos.js
+    // Pastikan blok ini dieksekusi sebelum app.js dimuat.
     window.posProducts = {!! $products->toJson() !!};
-    window.posRoutes = {
-        store: '{{ route("pos.sales.store") }}'
-    };
+    window.posRoutes = { store: '{{ route("pos.sales.store") }}' };
     window.csrfToken = '{{ csrf_token() }}';
 </script>
-@endsection
+@endpush
